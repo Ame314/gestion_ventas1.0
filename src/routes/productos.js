@@ -39,4 +39,24 @@ router.delete('/:id', (req, res) => {
   });
 });
 
+// Ruta para buscar productos por nombre
+router.get('/search', (req, res) => {
+    const { nombre } = req.query;
+    
+    if (!nombre) {
+      return res.status(400).send('El nombre del producto es obligatorio');
+    }
+  
+    const query = 'SELECT * FROM productos WHERE nombre LIKE ?';
+    db.query(query, [`%${nombre}%`], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Error al realizar la búsqueda');
+      }
+      
+      res.json(results);  // Devolver los productos que coinciden con el término de búsqueda
+    });
+  });
+  
+
 module.exports = router;
