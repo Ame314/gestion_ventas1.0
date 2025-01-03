@@ -6,27 +6,47 @@ const db = require('../db');
 // Obtener todos los productos
 router.get('/', (req, res) => {
   db.query('SELECT * FROM productos', (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) {
+      console.error('Error al obtener productos:', err);
+      return res.status(500).json({ error: err.message });
+    }
     res.json(results);
   });
 });
 
 // Crear un nuevo producto
 router.post('/', (req, res) => {
-  const { nombre, precio } = req.body;
-  db.query('INSERT INTO productos (nombre, precio) VALUES (?, ?)', [nombre, precio], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: 'Producto creado correctamente.' });
+  const { nombre, descripcion, precio, cantidad, url_imagen } = req.body;
+
+  // Validar que todos los campos necesarios estén presentes
+  if (!nombre || !descripcion || !precio || !cantidad || !url_imagen) {
+    return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+  }
+
+  db.query('INSERT INTO productos (nombre, descripcion, precio, cantidad, url_imagen) VALUES (?, ?, ?, ?, ?)', 
+    [nombre, descripcion, precio, cantidad, url_imagen], 
+    (err) => {
+      if (err) {
+        console.error('Error al agregar el producto:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ message: 'Producto creado correctamente.' });
   });
 });
 
 // Actualizar un producto
 router.put('/:id', (req, res) => {
   const { id } = req.params;
-  const { nombre, precio } = req.body;
-  db.query('UPDATE productos SET nombre = ?, precio = ? WHERE id = ?', [nombre, precio, id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: 'Producto actualizado correctamente.' });
+  const { nombre, descripcion, precio, cantidad, url_imagen } = req.body;
+
+  db.query('UPDATE productos SET nombre = ?, descripcion = ?, precio = ?, cantidad = ?, url_imagen = ? WHERE id = ?', 
+    [nombre, descripcion, precio, cantidad, url_imagen, id], 
+    (err) => {
+      if (err) {
+        console.error('Error al actualizar el producto:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ message: 'Producto actualizado correctamente.' });
   });
 });
 
@@ -34,7 +54,10 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
   db.query('DELETE FROM productos WHERE id = ?', [id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) {
+      console.error('Error al eliminar el producto:', err);
+      return res.status(500).json({ error: err.message });
+    }
     res.json({ message: 'Producto eliminado correctamente.' });
   });
 });
@@ -50,7 +73,7 @@ router.get('/search', (req, res) => {
   const query = 'SELECT * FROM productos WHERE nombre LIKE ?';
   db.query(query, [`%${nombre}%`], (err, results) => {
     if (err) {
-      console.error(err);
+      console.error('Error al realizar la búsqueda:', err);
       return res.status(500).send('Error al realizar la búsqueda');
     }
 
